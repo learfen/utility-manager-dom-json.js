@@ -1,15 +1,26 @@
 /**
     Autor: <leafen001@gmail.com> Daniel Garcia
 */
-var dataStore = new Object
+var dataStore = new Object({registers:{}})
 function data(k , v){
     if(v != undefined){
         for(let a of $.nodes(`*[listen=${k}]`)){
             a.innerHTML = v
         }
+        if(dataStore.registers[k]){
+            for(let a of dataStore.registers[k]){
+                a.push(v)
+            }
+        }
         dataStore[k]=v
     }
     if(k){return  dataStore[k] }
+}
+function listenChilds(key , obj){
+    if(!obj.push){ console.log("No tiene la funcion push" , obj) }
+    if(!dataStore.registers[key]){ dataStore.registers[key] = []}
+    dataStore.registers[key].push(obj)
+    obj.push(dataStore[key])
 }
 
 class ${
@@ -173,7 +184,12 @@ class Box{
 
         this.children = []
     }
-    childAdd(c){
+    push(c){
+        if(this.nodo.children){
+            for(let a of this.nodo.children){
+                a.remove()
+            }
+        }
         for(let a of c){
             let nodo = {}
             nodo[this.child] = a
@@ -186,11 +202,16 @@ function example(){
     $.nodePush({div:{id:"body"}} , document.body)
 
     let select = new Box('miselect is select>option' , "#body")
-    select.childAdd([ {value:"nuevo", text:"nuevo text"} ])
+    listenChilds("selectOptions" , select)
     let btn = $.nodeNew( {button:{id:"test-btn-data" , text:"change data"}} )
 
     btn.onclick = e => {
         data("mytext" , "laura")
+        data("selectOptions" , [ 
+            {value:"nuevo2", text:"nuevo text 2"} ,
+            {value:"nuevo3", text:"nuevo text 3"} ,
+            {value:"nuevo4", text:"nuevo text 4"} ,
+        ])
     }
 
     let other = {div:{listen:"mytext"}}
@@ -207,4 +228,5 @@ function example(){
 }
 
 data("mytext","daniel")
+data("selectOptions" , [ {value:"nuevo1", text:"nuevo text 1"} ] )
 example()
