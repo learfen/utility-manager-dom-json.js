@@ -4,15 +4,17 @@
 var dataStore = new Object({registers:{}})
 function data(k , v){
     if(v != undefined){
-        for(let a of $.nodes(`*[listen=${k}]`)){
-            a.innerHTML = v
-        }
-        if(dataStore.registers[k]){
-            for(let a of dataStore.registers[k]){
-                a.push(v)
+        if(dataStore.registers[k] != v){
+            for(let a of $.nodes(`*[listen=${k}]`)){
+                a.innerHTML = v
             }
+            if(dataStore.registers[k]){
+                for(let a of dataStore.registers[k]){
+                    a.push(v)
+                }
+            }
+            dataStore[k]=v
         }
-        dataStore[k]=v
     }
     if(k){return  dataStore[k] }
 }
@@ -60,7 +62,6 @@ class ${
                 node.appendChild( childInsert )
             }
         }
-        activable()
         return node
     }
     static nodePush(n, q){
@@ -91,73 +92,9 @@ class ${
     static random(min, max) {
         return Math.floor(Math.random() * (max - min)) + min;
     }
-    static nodeActive(q){
-        let qq = typeof q == 'string' ? $.node(q) : q
-        qq.classList.add('active')
-        if(qq.classList.contains('modal')){
-            $.node('body').style.overflow = 'hidden'
-        }
-        setTimeout( ()=> {
-            qq.classList.add('active-ready')
-        }, 500)
-    }
-    static nodeInactive(q){
-        let qq = typeof q == 'string' ? $.node(q) : q
-        if(qq != null){
-            qq.classList.add('inactive')
-            setTimeout( ()=> {
-                qq.classList.remove('active-ready')
-                if(qq.classList.contains('modal')){
-                    $.node('body').style.overflow = 'hidden'
-                }
-            }, 250)
-            setTimeout( ()=> {
-                qq.classList.remove('active')
-                qq.classList.remove('inactive')
-            }, 500)
-        }
-    }
-    static nodeToggle(q){
-        let qq = typeof q == 'string' ? $.node(q) : q
-        qq = $.node('.modal.active') == undefined ? qq : $.node('.modal.active')
-        qq = $.node('.help.active') == undefined ? qq : $.node('.help.active')
-        if(qq != null){
-            if(qq.className.search('active')>-1){
-                $.nodeInactive(q)
-                return 'inactive'
-            }else{
-                $.nodeActive(q)
-                return 'active'
-            }
-        }
-    }
     static arrayLast(a, n=0){
         return a[a.length - (1 + n)]
     }
-    static print(...c){
-        for(let a of c){
-            console.log(a)
-        }
-    }
-}
-
-function activable(){
-    for(let a of $.nodes('*[activable]')){
-        a.onclick = (e)=>{
-            let obj = e.target.activable == '' ? e.target : e.target.getAttribute('activable').split(',')
-            for(let a of obj){
-                if(a[0] == '!'){
-                    $.nodeInactive( a.replace('!','') )    
-                }else{
-                    $.nodeToggle( a )
-                }
-            }
-        }
-    }
-}
-
-function eventsAdded(){
-    activable()
 }
 
 function n_push (n){
@@ -185,10 +122,14 @@ class Box{
         this.children = []
     }
     push(c){
-        if(this.nodo.children){
+        if(this.nodo.children.length){
             for(let a of this.nodo.children){
                 a.remove()
             }
+            for(let a of this.nodo.children){
+                a.remove()
+            }
+
         }
         for(let a of c){
             let nodo = {}
@@ -206,12 +147,20 @@ function example(){
     let btn = $.nodeNew( {button:{id:"test-btn-data" , text:"change data"}} )
 
     btn.onclick = e => {
-        data("mytext" , "laura")
-        data("selectOptions" , [ 
-            {value:"nuevo2", text:"nuevo text 2"} ,
-            {value:"nuevo3", text:"nuevo text 3"} ,
-            {value:"nuevo4", text:"nuevo text 4"} ,
-        ])
+        if(count == 0){
+            data("mytext" , "laura")
+            data("selectOptions" , [ 
+                {value:"nuevo2", text:"nuevo text 2"} ,
+                {value:"nuevo3", text:"nuevo text 3"} ,
+                {value:"nuevo4", text:"nuevo text 4"} ,
+            ])
+        }
+        if(count == 1){
+            data("selectOptions" , [ 
+                {value:"nuevo1", text:"hola"} ,
+            ])
+        }
+        count++
     }
 
     let other = {div:{listen:"mytext"}}
@@ -227,6 +176,7 @@ function example(){
     } , "#body")
 }
 
+var count = 0
 data("mytext","daniel")
 data("selectOptions" , [ {value:"nuevo1", text:"nuevo text 1"} ] )
 example()
